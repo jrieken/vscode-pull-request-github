@@ -5,7 +5,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IComment } from '../common/comment';
+import { IComment, IReviewThread } from '../common/comment';
 import { parseDiff } from '../common/diffHunk';
 import { GitChangeType } from '../common/file';
 import { GitHubRef } from '../common/githubRef';
@@ -602,6 +602,39 @@ export class PullRequestModel extends IssueModel<PullRequest> implements IPullRe
 		});
 	}
 
+	async getReviewThreads(): Promise<IReviewThread[]> {
+		const { remote, query, schema } = await this.githubRepository.ensure();
+		try {
+			const { data } = await query<PullRequestCommentsResponse>({
+				query: schema.PullRequestComments,
+				variables: {
+					owner: remote.owner,
+					name: remote.repositoryName,
+					number: this.number,
+				},
+			});
+
+			const reviewThreads = data.repository.pullRequest.reviewThreads.nodes.map(node => {
+				return {
+					id: node.id,
+					isResolved: node.isResolved,
+					viewerCanResolve: node.viewerCanResolve,
+					path: node.path,
+					line: node.line,
+					originalLine: node.originalLine,
+					diffSide: node.diffSide,
+					isOutdated: node.isOutdated,
+					comments: node.comments.nodes.map(comment => parseGraphQLComment(comment, node.isResolved), remote),
+				};
+			});
+
+			return reviewThreads;
+		} catch (e) {
+			Logger.appendLine(`Failed to get pull request review comments: ${e}`);
+			return [];
+		}
+	}
+
 	/**
 	 * Get all review comments.
 	 */
@@ -618,10 +651,8 @@ export class PullRequestModel extends IssueModel<PullRequest> implements IPullRe
 			});
 
 			const comments = data.repository.pullRequest.reviewThreads.nodes
-				.map((node: any) =>
-					node.comments.nodes.map((comment: any) => parseGraphQLComment(comment, node.isResolved), remote),
-				)
-				.reduce((prev: any, curr: any) => prev.concat(curr), [])
+				.map(node => node.comments.nodes.map(comment => parseGraphQLComment(comment, node.isResolved), remote))
+				.reduce((prev, curr) => prev.concat(curr), [])
 				.sort((a: IComment, b: IComment) => {
 					return a.createdAt > b.createdAt ? 1 : -1;
 				});

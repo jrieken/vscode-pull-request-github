@@ -7,7 +7,7 @@
 import * as vscode from 'vscode';
 import { Repository } from '../api/api';
 import { GitApiImpl } from '../api/api1';
-import { IComment, Reaction } from '../common/comment';
+import { IComment, IReviewThread, Reaction } from '../common/comment';
 import { DiffHunk, parseDiffHunk } from '../common/diffHunk';
 import { Resource } from '../common/resources';
 import * as Common from '../common/timelineEvent';
@@ -51,6 +51,29 @@ export function createVSCodeCommentThread(
 		isOnLocalFile || isResolved
 			? vscode.CommentThreadCollapsibleState.Collapsed
 			: vscode.CommentThreadCollapsibleState.Expanded;
+	return vscodeThread as GHPRCommentThread;
+}
+
+export function createVSCodeCommentThreadForReviewThread(
+	uri: vscode.Uri,
+	range: vscode.Range,
+	thread: IReviewThread,
+	commentController: vscode.CommentController,
+): GHPRCommentThread {
+	const vscodeThread = commentController.createCommentThread(uri, range, []);
+
+	(vscodeThread as GHPRCommentThread).threadId = thread.id;
+
+	vscodeThread.comments = thread.comments.map(comment => new GHPRComment(comment, vscodeThread as GHPRCommentThread));
+	(vscodeThread as GHPRCommentThread).isResolved = thread.isResolved;
+
+	updateCommentThreadLabel(vscodeThread as GHPRCommentThread);
+	const isOnLocalFile = uri.scheme !== 'pr' && uri.scheme !== 'review';
+	vscodeThread.collapsibleState =
+		isOnLocalFile || thread.isResolved
+			? vscode.CommentThreadCollapsibleState.Collapsed
+			: vscode.CommentThreadCollapsibleState.Expanded;
+
 	return vscodeThread as GHPRCommentThread;
 }
 

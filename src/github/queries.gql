@@ -227,7 +227,14 @@ query PullRequestComments($owner: String!, $name: String!, $number: Int!, $first
 		pullRequest(number: $number) {
 			reviewThreads(first: $first) {
 				nodes {
+					id
 					isResolved
+					viewerCanResolve
+					path
+					diffSide
+					line
+					originalLine
+					isOutdated
 					comments(first: 100) {
 						nodes {
 							...ReviewComment
@@ -236,12 +243,6 @@ query PullRequestComments($owner: String!, $name: String!, $number: Int!, $first
 				}
 			}
 		}
-	}
-	rateLimit {
-		limit
-		cost
-		remaining
-		resetAt
 	}
 }
 
