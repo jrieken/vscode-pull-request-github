@@ -12,7 +12,6 @@ import { DiffHunk, parseDiffHunk } from '../common/diffHunk';
 import { Resource } from '../common/resources';
 import * as Common from '../common/timelineEvent';
 import { uniqBy } from '../common/utils';
-import { ThreadData } from '../view/treeNodes/pullRequestNode';
 import { OctokitCommon } from './common';
 import { GitHubRepository, ViewerPermission } from './githubRepository';
 import * as GraphQL from './graphql';
@@ -32,26 +31,6 @@ import { GHPRComment, GHPRCommentThread } from './prComment';
 
 export interface CommentReactionHandler {
 	toggleReaction(comment: vscode.Comment, reaction: vscode.CommentReaction): Promise<void>;
-}
-export function createVSCodeCommentThread(
-	thread: ThreadData,
-	commentController: vscode.CommentController,
-): GHPRCommentThread {
-	const vscodeThread = commentController.createCommentThread(thread.uri, thread.range!, []);
-
-	(vscodeThread as GHPRCommentThread).threadId = thread.threadId;
-
-	vscodeThread.comments = thread.comments.map(comment => new GHPRComment(comment, vscodeThread as GHPRCommentThread));
-	const isResolved = !!thread.comments[0]?.isResolved;
-	(vscodeThread as GHPRCommentThread).isResolved = isResolved;
-
-	updateCommentThreadLabel(vscodeThread as GHPRCommentThread);
-	const isOnLocalFile = thread.uri.scheme !== 'pr' && thread.uri.scheme !== 'review';
-	vscodeThread.collapsibleState =
-		isOnLocalFile || isResolved
-			? vscode.CommentThreadCollapsibleState.Collapsed
-			: vscode.CommentThreadCollapsibleState.Expanded;
-	return vscodeThread as GHPRCommentThread;
 }
 
 export function createVSCodeCommentThreadForReviewThread(

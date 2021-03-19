@@ -162,6 +162,20 @@ export interface Review {
 	createdAt: string;
 }
 
+export interface ReviewThread {
+	id: string;
+	isResolved: boolean;
+	viewerCanResolve: boolean;
+	path: string;
+	diffSide: DiffSide;
+	line: number;
+	originalLine: number;
+	isOutdated: boolean;
+	comments: {
+		nodes: ReviewComment[];
+	};
+}
+
 export interface TimelineEventsResponse {
 	repository: {
 		pullRequest: {
@@ -252,6 +266,12 @@ export interface AssignableUsersResponse {
 		};
 	};
 	rateLimit: RateLimit;
+}
+
+export interface AddReviewThreadResponse {
+	addPullRequestReviewThread: {
+		thread: ReviewThread;
+	}
 }
 
 export interface AddCommentResponse {

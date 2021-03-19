@@ -136,7 +136,7 @@ describe('ReviewCommentController', function () {
 		const fileName = 'data/products.json';
 		const uri = vscode.Uri.parse(`${repository.rootUri.toString()}/${fileName}`);
 		const localFileChanges = [createLocalFileChange(uri, fileName, repository.rootUri)];
-		const reviewCommentController = new TestReviewCommentController(manager, repository, localFileChanges, [], []);
+		const reviewCommentController = new TestReviewCommentController(manager, repository, localFileChanges);
 
 		sinon.stub(activePullRequest, 'validateDraftMode').returns(Promise.resolve(false));
 		sinon.stub(activePullRequest, 'getReviewThreads').returns(
@@ -192,8 +192,6 @@ describe('ReviewCommentController', function () {
 				manager,
 				repository,
 				localFileChanges,
-				[],
-				[],
 			);
 			const thread = createGHPRCommentThread('review-1.1', uri);
 

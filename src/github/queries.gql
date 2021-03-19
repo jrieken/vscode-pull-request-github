@@ -126,6 +126,22 @@ fragment Reactable on Reactable {
 	}
 }
 
+fragment ReviewThread on PullRequestReviewThread {
+	id
+	isResolved
+	viewerCanResolve
+	path
+	diffSide
+	line
+	originalLine
+	isOutdated
+	comments(first: 100) {
+		nodes {
+			...ReviewComment
+		}
+	}
+}
+
 query TimelineEvents($owner: String!, $name: String!, $number: Int!, $last: Int = 150) {
 	repository(owner: $owner, name: $name) {
 		pullRequest(number: $number) {
@@ -432,6 +448,14 @@ mutation AddComment($input: AddPullRequestReviewCommentInput!) {
 	addPullRequestReviewComment(input: $input) {
 		comment {
 			...ReviewComment
+		}
+	}
+}
+
+mutation AddReviewThread($input: AddPullRequestReviewThreadInput!) {
+	addPullRequestReviewThread(input: $input) {
+		thread {
+			...ReviewThread
 		}
 	}
 }
